@@ -1,4 +1,4 @@
-from tools import get_tools, get_tool_by_name
+from tools import get_tools, get_tool_by_name, make_screenshot
 from prompts import *
 from few_shot import *
 import litellm
@@ -78,7 +78,8 @@ class ReActExectutor:
         self.next_images = []
 
     def execute(self, query):
-        initial_prompt = build_react_prompt(self.system_prompt, self.few_shot_prompt, query)
+        start_point = make_screenshot()
+        initial_prompt = build_react_prompt(self.system_prompt, self.few_shot_prompt, query, start_point)
         finish = False
         i = 0
         prompt = initial_prompt
@@ -99,5 +100,4 @@ class ReActExectutor:
 if __name__ == "__main__":
     
     agent = ReActExectutor()
-    agent.execute("Scroll up by 100. and type 'Hello World' after clicking at coordinates (100, 200).")
-
+    agent.execute("Notepad")

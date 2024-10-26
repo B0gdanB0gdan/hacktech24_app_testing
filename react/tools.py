@@ -2,20 +2,26 @@ import pyautogui
 from utils import pil_image_to_base64
 
 
+def make_screenshot():
+    return pil_image_to_base64(pyautogui.screenshot())
+
+
 def click(coord):
     x, y = coord.split(", ")
     x = int(x.replace("(", ""))
     y = int(y.replace(")", ""))
     pyautogui.click(x, y)
-    return pil_image_to_base64(pyautogui.screenshot())
+    return make_screenshot()
+
 
 def type_text(text):
     pyautogui.write(text)
-    return pil_image_to_base64(pyautogui.screenshot())
+    return make_screenshot()
+
 
 def scroll(amount):
     pyautogui.scroll(int(amount))
-    return pil_image_to_base64(pyautogui.screenshot())
+    return make_screenshot()
 
 
 class Tool:

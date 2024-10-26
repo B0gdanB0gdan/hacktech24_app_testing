@@ -14,7 +14,7 @@ def get_system_prompt(tools):
 
     Use the following format:
 
-    Query: The instruction you must follow.
+    Query: The instruction you must follow. You start from this state described in the following image: [base64 encoded image] 
     Thought: You should always think about what to do.
     Action: The action to take, should be one of [{tool_names}].
     Action Input: The input to the action. For example, the text to type, the coordinates to click or the number to scrollHello World.
@@ -30,7 +30,16 @@ def get_few_shot_prompt(examples):
     for example in examples:
         few_shots.append({
             "role": "user", 
-            "content": [{"type": "text", "text": example["user"]}]
+            "content": [
+                {
+                    "type": "text", 
+                    "text": example["user"]["text"]
+                },
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{encode_image(example["user"]["image_path"])}", "detail": "high"}
+                }
+            ]
         })
         for i in range(1, example["steps"]):
             step_base64 = encode_image(example["assistant"][f"step{i}"]["image_path"])
@@ -56,7 +65,7 @@ def get_few_shot_prompt(examples):
     return few_shots
 
 
-def build_react_prompt(system_prompt, few_shot, query):
+def build_react_prompt(system_prompt, few_shot, query, image_starting_point):
    
     return [
         {
@@ -66,6 +75,15 @@ def build_react_prompt(system_prompt, few_shot, query):
     ] + few_shot + [
         {
             "role": "user",
-            "content": [{"type": "text", "text": "\nQuery: \n"+query}]
+            "content": [
+                {
+                    "type": "text", 
+                    "text": "\nQuery: \n"+ query + "You start from this state described in the following image:"
+                },
+                {
+                    "type": "image_url", 
+                    "text": {"url": f"data:image/jpeg;base64,{image_starting_point}", "detail": "high"}
+                }
+            ]
         }
     ]
