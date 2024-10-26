@@ -28,6 +28,7 @@ def get_system_prompt(tools):
 def get_few_shot_prompt(examples):
     few_shots = []
     for example in examples:
+        im = encode_image(example["user"]["image_path"])
         few_shots.append({
             "role": "user", 
             "content": [
@@ -37,7 +38,10 @@ def get_few_shot_prompt(examples):
                 },
                 {
                     "type": "image_url",
-                    "image_url": {"url": f"data:image/jpeg;base64,{encode_image(example["user"]["image_path"])}", "detail": "high"}
+                    "image_url": {
+                        "url": f"data:image/jpeg;base64,{im}", 
+                        "detail": "high"
+                        }
                 }
             ]
         })
@@ -66,7 +70,6 @@ def get_few_shot_prompt(examples):
 
 
 def build_react_prompt(system_prompt, few_shot, query, image_starting_point):
-   
     return [
         {
             "role": "system", 
@@ -82,7 +85,7 @@ def build_react_prompt(system_prompt, few_shot, query, image_starting_point):
                 },
                 {
                     "type": "image_url", 
-                    "text": {"url": f"data:image/jpeg;base64,{image_starting_point}", "detail": "high"}
+                    "image_url": {"url": f"data:image/jpeg;base64,{image_starting_point}", "detail": "high"}
                 }
             ]
         }

@@ -45,10 +45,10 @@ def inference_sam_m2m_auto(model, image, dest_path, text_size=1080, label_mode='
         mask_map[mask == 1] = label
         label += 1
     im = demo.get_image()   
-    np_image = Image.fromarray(im)
+    pil_image = Image.fromarray(im)
     if save:
-        np_image.save(dest_path)
-    return im, sorted_anns, np_image
+        pil_image.save(dest_path)
+    return im, sorted_anns, pil_image
 
 def highlight(alpha, label_mode, anno_mode, history_texts):
     res = history_texts[0]
@@ -92,25 +92,24 @@ def images_reader(directory):
             except IOError:
                 print(f"Unable to open image {filename}. It may not be a valid JPEG.")
 
-def run_on_single_frame(image_path):
-    dest_path = os.path.join(image_path.split('.')[0] + '_som' + image_path.split('.')[1])
-    _, _, np_image = inference_sam_m2m_auto(model_sam, image, dest_path=dest_path, anno_mode=['Mask','Mark'], save=False)
+def run_on_single_frame(image, model_sam):
+    # dest_path = os.path.join(image_path.split('.')[0] + '_som' + image_path.split('.')[1])
+    _, _, np_image = inference_sam_m2m_auto(model_sam, image, dest_path='', anno_mode=['Mask','Mark'], save=False)
     return np_image
 
 if __name__ == "__main__":
-    path_to_video = r'..\data\ppt_b.mp4'
-    frames_dir = r'..\data\ppt_b2'
+    path_to_video = r'C:\Users\V9CMCLC\Downloads\vscode_type.mp4'
+    frames_dir = r'..\data\vscode_type'
     split_into_frames(path_to_video, frames_dir)
     
-    path_to_model = r'C:\Users\V9CMCLC\Desktop\hackatons\HackTech_Oradea_2024\hacktech24_app_testing\segmentation\SoM\sam_vit_h_4b8939.pth'
-    model_sam = sam_model_registry["vit_h"](checkpoint=path_to_model).eval().cuda()
+    # path_to_model = r'C:\Users\V9CMCLC\Desktop\hackatons\HackTech_Oradea_2024\hacktech24_app_testing\segmentation\SoM\sam_vit_h_4b8939.pth'
+    # model_sam = sam_model_registry["vit_h"](checkpoint=path_to_model).eval().cuda()
 
-    frames_dir = r'C:\Users\V9CMCLC\Downloads\few_shot'
-    history_masks = []
-    history_images = []
-    dest_dir = os.path.join(frames_dir, os.pardir, os.path.basename(frames_dir)+'_som')
-    os.makedirs(dest_dir, exist_ok=True)
+    # history_masks = []
+    # history_images = []
+    # dest_dir = os.path.join(frames_dir, os.pardir, os.path.basename(frames_dir)+'_som')
+    # os.makedirs(dest_dir, exist_ok=True)
 
-    for (image, fp) in images_reader(frames_dir):
-        dest_path = os.path.join(dest_dir, os.path.basename(fp))
-        inference_sam_m2m_auto(model_sam, image, dest_path=dest_path, anno_mode=['Mask','Mark'])
+    # for (image, fp) in images_reader(frames_dir):
+    #     dest_path = os.path.join(dest_dir, os.path.basename(fp))
+    #     inference_sam_m2m_auto(model_sam, image, dest_path=dest_path, anno_mode=['Mask','Mark'])

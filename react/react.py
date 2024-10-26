@@ -1,6 +1,8 @@
 from tools import get_tools, get_tool_by_name, make_screenshot
 from prompts import *
 from few_shot import *
+from propose_instructions import get_instruction_set
+
 import litellm
 from dotenv import load_dotenv
 load_dotenv("../.env")
@@ -36,6 +38,7 @@ class ReActExectutor:
         self.new_obs_texts = []
         self.next_images = []
         self.max_depth = max_depth
+        self.prev_lookup = None
 
     def parse_output(self, output):
         actions = re.findall(r'Action:\s*(.*)', output)
@@ -43,7 +46,8 @@ class ReActExectutor:
         action2execute = actions[0]
         input2take = action_inputs[0]
         tool = get_tool_by_name(action2execute)
-        next_image = tool.func(input2take)
+        next_image, lookup = tool.func(input2take, self.prev_lookup)
+        self.prev_lookup = lookup
         new_obs_text = truncate_obs(output, 0)
         self.new_obs_texts.append(new_obs_text)
         self.next_images.append(next_image)
@@ -78,17 +82,22 @@ class ReActExectutor:
         self.next_images = []
 
     def execute(self, query):
-        start_point = make_screenshot()
+        start_point, lookup = make_screenshot()
+        self.prev_lookup = lookup
         initial_prompt = build_react_prompt(self.system_prompt, self.few_shot_prompt, query, start_point)
         finish = False
         i = 0
         prompt = initial_prompt
+        # import json
+        # with open('a.json', 'w') as f:
+        #     json.dump(prompt, f, indent=4)
+        # return 0
         while not finish and i < self.max_depth:
             response = litellm.completion(model="gpt-4-turbo",
                                         messages=prompt,
                                         max_tokens=4096,
                                         temperature=1).choices[0].message.content
-            
+            print(response)
             finish = self.is_finished(response)
             prompt = initial_prompt + self.parse_output(response)
             i += 1 
@@ -98,6 +107,15 @@ class ReActExectutor:
 
 
 if __name__ == "__main__":
-    
+    p = fr"../data/vscode_mic_rare/*"
+    # logs = get_instruction_set(p)
+    # print(logs)
+    logs = """
+1. Click on the "File" menu option located at the top left corner of the screen.
+2. Select the "New File" option from the dropdown menu under the "File" tab.
+3. From the "Select File Type or Enter File Name" dropdown, choose "Python File."
+4. Begin typing in the text editor area, specifically in the file titled "Untitled-1".
+"""
+    logs = 'Click on the "File" menu option located at the top left corner of the screen.'
     agent = ReActExectutor()
-    agent.execute("Notepad")
+    agent.execute(logs)
