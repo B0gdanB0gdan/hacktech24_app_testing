@@ -1,12 +1,29 @@
 import pyautogui
 from utils import pil_image_to_base64
+import sys
+sys.path.append('../segmentation')
+from segmentation import inference_sam_m2m_auto
+from sam_model import ModelSingleton
+from PIL import Image
+
 
 
 def make_screenshot():
-    return pil_image_to_base64(pyautogui.screenshot())
+    model = ModelSingleton().get_model()
+    ss = pyautogui.screenshot()
+    if ss.mode != 'RGB':
+        ss = ss.convert('RGB')
+    _, sorted_anns, pil_image = inference_sam_m2m_auto(model, ss, dest_path='./test.png', anno_mode=['Mask','Mark'], save=True)
+    mappings = {}
+    for i in range(len(sorted_anns)):
+        mappings[i+1] = sorted_anns[i]['point_coords'][0]
+    return pil_image_to_base64(pil_image), mappings
 
 
-def click(coord):
+def click(label, prev_lookup):
+    print("label:",label)
+    coord = prev_lookup[label]
+    print(coord)
     x, y = coord.split(", ")
     x = int(x.replace("(", ""))
     y = int(y.replace(")", ""))
@@ -14,12 +31,12 @@ def click(coord):
     return make_screenshot()
 
 
-def type_text(text):
+def type_text(text, prev_lookup):
     pyautogui.write(text)
     return make_screenshot()
 
 
-def scroll(amount):
+def scroll(amount, prev_lookup):
     pyautogui.scroll(int(amount))
     return make_screenshot()
 
@@ -35,17 +52,17 @@ def get_tools():
     return [
         Tool(
             name="Click",
-            func=lambda coord: click(coord),
-            description="Click at screen position (x, y)."
+            func=click,
+            description="Click on label x."
         ),
         Tool(
             name="Type",
-            func=lambda text: type_text(text),
+            func=type_text,
             description="Type a string using the keyboard."
         ),
         Tool(
             name="Scroll",
-            func=lambda amount: scroll(amount),
+            func=scroll,
             description="Scroll the screen up or down by an amount."
         ),
     ]
