@@ -1,26 +1,16 @@
-import base64
 from tools import get_tools, get_tool_by_name
 from prompts import *
 from few_shot import *
-from glob import glob
 import litellm
 from dotenv import load_dotenv
 load_dotenv("../.env")
 import re 
 
 
-
-def encode_image(image_path):
-    with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode('utf-8')
-
-    
-
 def truncate_obs(text, index):
     lines = text.strip().split("\n")
     modified_lines = []
-    observation_count = 0
-    i = 0
+    i, observation_count = 0, 0
 
     while i < len(lines):
         if lines[i].startswith("Observation:"):
@@ -28,9 +18,7 @@ def truncate_obs(text, index):
                 modified_lines.append("Observation: ")
                 break
             else:
-                # Add the current observation
                 modified_lines.append(lines[i])
-                # Move to the next observation, skipping lines until an empty line is found
                 while i < len(lines) and lines[i].strip():
                     i += 1
             observation_count += 1
@@ -42,27 +30,23 @@ def truncate_obs(text, index):
 
 
 class ReActExectutor:
-    def __init__(self):
+    def __init__(self, max_depth=3):
         self.system_prompt = get_system_prompt(get_tools())
-        image_paths = glob("frames/*.png")[:4]
-        images = [encode_image(image_path) for image_path in image_paths]
-        self.few_shot_prompt = get_few_shot_prompt(examples, images)
-        self.step = 0 
+        self.few_shot_prompt = get_few_shot_prompt(get_examples())
         self.new_obs_texts = []
         self.next_images = []
+        self.max_depth = max_depth
 
     def parse_output(self, output):
         actions = re.findall(r'Action:\s*(.*)', output)
         action_inputs = re.findall(r'Input:\s*(.*)', output)
-        action2execute = actions[self.step]
-        input2take = action_inputs[self.step]
+        action2execute = actions[0]
+        input2take = action_inputs[0]
         tool = get_tool_by_name(action2execute)
-        
         next_image = tool.func(input2take)
-        new_obs_text = truncate_obs(output, self.step)
+        new_obs_text = truncate_obs(output, 0)
         self.new_obs_texts.append(new_obs_text)
         self.next_images.append(next_image)
-        self.step += 1
 
         new_response = []
         for new_obs_text, next_image in zip(self.new_obs_texts, self.next_images):
@@ -83,24 +67,31 @@ class ReActExectutor:
         return new_response
 
     def is_finished(self, output):
+        
         actions = re.findall(r'Action:\s*(.*)', output)
-        action2execute = actions[self.step]
-        return action2execute == "Finish"
+        action2execute = actions[0]
+        return action2execute == "Finish" 
+   
+    def reset(self):
+        self.step = 0
+        self.new_obs_texts = []
+        self.next_images = []
 
     def execute(self, query):
-        prompt = build_react_prompt(self.system_prompt, self.few_shot_prompt, query)
+        initial_prompt = build_react_prompt(self.system_prompt, self.few_shot_prompt, query)
         finish = False
-        while not finish:
+        i = 0
+        prompt = initial_prompt
+        while not finish and i < self.max_depth:
             response = litellm.completion(model="gpt-4-turbo",
                                         messages=prompt,
                                         max_tokens=4096,
                                         temperature=1).choices[0].message.content
+            
             finish = self.is_finished(response)
-            prompt += self.parse_output(response)
-            break 
-        self.new_obs_texts = []
-        self.next_images = []
-        self.step = 0
+            prompt = initial_prompt + self.parse_output(response)
+            i += 1 
+        self.reset()
         return response
 
 
@@ -108,5 +99,5 @@ class ReActExectutor:
 if __name__ == "__main__":
     
     agent = ReActExectutor()
-    agent.execute("Scroll up by 3 pages. and type 'Hello World' after clicking at coordinates (100, 200).")
+    agent.execute("Scroll up by 100. and type 'Hello World' after clicking at coordinates (100, 200).")
 

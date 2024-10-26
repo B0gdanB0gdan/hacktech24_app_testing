@@ -1,41 +1,73 @@
 example1 = {
-"user": "Query: Click on the \"Search\" button located at the bottom right corner.",
-"assistant": """
-Thought: I need to find the coordinates of the "Search" button.
-Action: Click
-Input: (600, 700)
-Observation: 
-"""
+    "user": "Query: Type \"dogs\" in the Chrome search bar.",
+    "steps": 3,
+    "assistant": {
+        "step1": {
+            "text": """
+                Thought: First I need to find the coordinates of the Chrome icon.
+                Action: Click
+                Input: (900, 1070)
+                Observation: 
+            """,
+            "image_path": "examples/example1/step1.png"
+        },
+        "step2": {
+            "text": """
+                Thought: Then I need to type in the word \"dogs\".
+                Action: Type
+                Input: dogs
+                Observation:     
+            """,
+            "image_path": "examples/example1/step2.png"
+        },
+        "step3": {
+            "text": """
+                Thought: I reached the final frame.
+                Action: Finish
+            """
+        }
+    }
 }
 
-example2 = {
-"user": "Query: Type \"Hello World\" after clicking at coordinates (100, 200)",   
-"assistant": """
-Thought: I need to click on (100, 200) and then type the provided text.
-Action: Click
-Input: (100, 200)
-Observation: 
-"""
-}
+# example2 = {
+#     "user": "Query: Click on the \"Search\" button located at the bottom right corner.",
+#     "steps": 4,
+#     "assistant": {
+#         "step1": {
+#             "text": """
+#                 Thought: I need to find the coordinates of the "Search" button.
+#                 Action: Click
+#                 Input: (600, 700)
+#                 Observation: 
+#             """,
+#             "image_path": "examples/example1/step1.png"
+#         },
+#         "step2": {
+#             "text": """
+#                 Thought: I need to find the coordinates of the "Search" button.
+#                 Action: Click
+#                 Input: (600, 700)
+#                 Observation:     
+#             """,
+#             "image_path": "examples/example1/step2.png"
+#         },
+#         "step3": {
+#             "text": """
+#                 Thought: I need to find the coordinates of the "Search" button.
+#                 Action: Click
+#                 Input: (600, 700)
+#                 Observation:     
+#             """,
+#             "image_path": "examples/example1/step3.png"
+#         },
+#         "step4": {
+#             "text": """
+#                 Thought: I reached the final frame.
+#                 Action: Finish
+#             """
+#         }
+#     }
+# }
 
-example3 = {
-"user": "Query: Scroll up by 3 pages.",
-"assistant": """
-Thought: Scrolling up by 3 pages requires a scroll command.
-Action: Scroll
-Input: 300
-Observation: 
-"""
-}
-
-example4 = {
-"user": "Query: Move the cursor to the center of the screen.",
-"assistant": """
-Thought: I should move the cursor to the center coordinates.
-Action: MoveCursor
-Input: (960, 540)
-Observation: 
-"""
-}
-
-examples = [example1, example2, example3, example4]
+def get_examples():
+    return [example1]

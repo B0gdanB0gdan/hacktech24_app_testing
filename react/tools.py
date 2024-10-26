@@ -1,23 +1,6 @@
 import pyautogui
-from PIL import Image
-from io import BytesIO
-import base64
+from utils import pil_image_to_base64
 
-    
-def pil_image_to_base64(image: Image.Image) -> str:
-    # Create a BytesIO object to hold the image in memory
-    buffered = BytesIO()
-    
-    # Save the PIL image to the BytesIO object in a specific format (e.g., PNG or JPEG)
-    image.save(buffered, format="PNG")
-    
-    # Get the bytes value of the image
-    image_bytes = buffered.getvalue()
-    
-    # Encode the image bytes to a base64 string
-    base64_string = base64.b64encode(image_bytes).decode('utf-8')
-    
-    return base64_string
 
 def click(coord):
     x, y = coord.split(", ")

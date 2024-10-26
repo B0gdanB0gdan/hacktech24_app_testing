@@ -1,3 +1,5 @@
+from utils import encode_image
+import textwrap
 
 
 def get_system_prompt(tools):
@@ -15,33 +17,42 @@ def get_system_prompt(tools):
     Query: The instruction you must follow.
     Thought: You should always think about what to do.
     Action: The action to take, should be one of [{tool_names}].
-    Action Input: The input to the action. For example, the text to type or the coordinates to click.
+    Action Input: The input to the action. For example, the text to type, the coordinates to click or the number to scrollHello World.
     Observation: The result of the action
     ... (this Thought/Action/Action Input/Observation can repeat N times)
     Thought: I now know the final answer.
-    Final Answer: The final answer to the original input question.
+    Action: Finish
 
     """
 
-def get_few_shot_prompt(examples, images):
+def get_few_shot_prompt(examples):
     few_shots = []
-    for example, image in zip(examples, images):
+    for example in examples:
         few_shots.append({
             "role": "user", 
             "content": [{"type": "text", "text": example["user"]}]
         })
+        for i in range(1, example["steps"]):
+            step_base64 = encode_image(example["assistant"][f"step{i}"]["image_path"])
+            few_shots.append({
+                "role": "assistant",
+                "content": [{
+                    "type": "text", 
+                    "text": textwrap.dedent(example["assistant"][f"step{i}"]["text"])
+                },
+                {
+                "type": "image_url",
+                "image_url": {"url": f"data:image/jpeg;base64,{step_base64}", "detail": "high"}
+                }]
+            })
         few_shots.append({
             "role": "assistant",
             "content": [{
                 "type": "text", 
-                "text": example["assistant"]
-            },
-            {
-            "type": "image_url",
-            "image_url": {"url": f"data:image/jpeg;base64,{image}", "detail": "high"}
+                "text": textwrap.dedent(example["assistant"][f"step{example['steps']}"]["text"])
             }]
         })
-            
+ 
     return few_shots
 
 
