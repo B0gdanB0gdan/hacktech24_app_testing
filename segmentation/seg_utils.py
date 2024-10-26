@@ -1174,8 +1174,8 @@ class Visualizer:
         if text is not None and has_valid_segment:
             # lighter_color = tuple([x*0.2 for x in color])
             lighter_color = [1,1,1] # self._change_color_brightness(color, brightness_factor=0.7)
-            self._draw_number_in_mask(binary_mask, text, lighter_color, label_mode)
-        return self.output
+            x,y = self._draw_number_in_mask(binary_mask, text, lighter_color, label_mode)
+        return self.output, x,y
 
     def draw_soft_mask(self, soft_mask, color=None, *, text=None, alpha=0.5):
         """
@@ -1369,6 +1369,7 @@ class Visualizer:
         #         # bottom=np.max((cc_labels == cid).nonzero(), axis=1)[::-1]
         #         # center[1]=bottom[1]+2
         #         self.draw_text(text, center, color=color)
+        return coords_x[len(coords_x)//2] + 2, coords_y[len(coords_y)//2] - 6
     
     def _draw_text_in_mask(self, binary_mask, text, color):
         """

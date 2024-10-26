@@ -35,12 +35,14 @@ def inference_sam_m2m_auto(model, image, dest_path, text_size=1080, label_mode='
     sorted_anns = sorted(outputs, key=(lambda x: x['area']), reverse=True)
     label = 1
 
+    coords = {}
     mask_map = np.zeros(image_ori.shape, dtype=np.uint8)    
     for i, ann in enumerate(sorted_anns):
         mask = ann['segmentation']
         color_mask = np.random.random((1, 3)).tolist()[0]
         # color_mask = [int(c*255) for c in color_mask]
-        demo = visual.draw_binary_mask_with_number(mask, text=str(label), label_mode=label_mode, alpha=alpha, anno_mode=anno_mode)
+        demo, x, y = visual.draw_binary_mask_with_number(mask, text=str(label), label_mode=label_mode, alpha=alpha, anno_mode=anno_mode)
+        coords[i+1] = [x,y]
         # assign the mask to the mask_map
         mask_map[mask == 1] = label
         label += 1
@@ -48,7 +50,7 @@ def inference_sam_m2m_auto(model, image, dest_path, text_size=1080, label_mode='
     pil_image = Image.fromarray(im)
     if save:
         pil_image.save(dest_path)
-    return im, sorted_anns, pil_image
+    return im, coords, pil_image
 
 def highlight(alpha, label_mode, anno_mode, history_texts):
     res = history_texts[0]
