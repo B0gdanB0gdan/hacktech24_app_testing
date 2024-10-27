@@ -1,0 +1,92 @@
+Analyze the ENTIRE video from start (0:00) to end timestamp. You must:
+1. Watch the complete video duration
+2. Track cursor/interactions continuously
+3. Report ALL actions, no matter how minor
+4. Identical actions should not happen consecutively
+5. Generate a brief description for each action
+6. Avoid repetition of previous actions
+7. Confirm when you reach video end
+
+Process:
+1. Note video duration first
+2. Scan chronologically in short segments
+3. Report your current timestamp regularly
+4. Signal when complete analysis is done
+
+
+Required JSON structure:
+{
+  "actions": [
+    {
+      "type": "click|scroll|type",
+      "element": "string",
+      "value": "string|null"    // Required for type actions
+      "description": "string"
+    }
+  ],
+  "analysis_complete": boolean
+}
+
+Examples:
+Input: [Video of login sequence with submission]
+Output:
+{
+  "actions": [
+    {
+      "type": "click",
+      "element": "username field",
+      "value": null,
+      "description": "The user clicks on the user field"
+    },
+    {
+      "type": "type",
+      "element": "username field",
+      "value": "user@email.com",
+      "description": "The user types 'user@email.com' in the username field"
+    },
+    {
+      "type": "click",
+      "element": "Submit button",
+      "value": null,
+      "description": "The user clicks on the Submit button"
+    }
+  ],
+  "analysis_complete": true
+}
+
+Verification:
+- Start time: 0:00
+- End time: 2:00
+- Analysis completion: 100%
+
+
+Input: [Video of accessing help functionality from menu]
+Output:
+{
+  "actions": [
+    {
+      "type": "click",
+      "element": "Help menu label",
+      "value": null,
+      "description": "The user clicks on the Help menu label"
+    },
+    {
+      "type": "click",
+      "element": "About menu item",
+      "value": null,
+      "description": "The user clicks on the About menu item"
+    }
+  ],
+  "analysis_complete": true
+}
+
+Verification:
+- Start time: 0:00
+- End time: 0:20
+- Analysis completion: 100%
+
+Remember:
+- Click actions do not have any value
+- Track all the user interactions
+- Buttons that do not contain text should be referred simply as 'button'
+- Analyze the whole video
