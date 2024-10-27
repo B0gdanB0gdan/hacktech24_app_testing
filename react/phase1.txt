@@ -1,0 +1,6 @@
+1. Place the cursor in the text area located in the center of the WordPad window.
+2. Type the text "Hello World!" in the text area.
+3. Click on the "File" menu item located at the top left corner.
+4. Click on the "Save as" menu item in the File menu.
+5. In the "Save As" dialog window, type "doc" in the "File name" input field.
+6. Click the "Save" button located at the bottom right of the "Save As" dialog window.

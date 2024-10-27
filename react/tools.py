@@ -1,11 +1,8 @@
 import pyautogui
 from utils import pil_image_to_base64
-import sys
-sys.path.append('../segmentation')
-from segmentation import inference_sam_m2m_auto
+from segm.segmentation import inference_sam_m2m_auto
 from sam_model import ModelSingleton
-from PIL import Image
-
+from time import time
 
 
 def make_screenshot():
@@ -13,31 +10,29 @@ def make_screenshot():
     ss = pyautogui.screenshot()
     if ss.mode != 'RGB':
         ss = ss.convert('RGB')
-    _, sorted_anns, pil_image = inference_sam_m2m_auto(model, ss, dest_path='./test.png', anno_mode=['Mask','Mark'], save=True)
-    mappings = {}
-    for i in range(len(sorted_anns)):
-        mappings[i+1] = sorted_anns[i]['point_coords'][0]
+    _, mappings, pil_image = inference_sam_m2m_auto(model, ss, dest_path=f'phase2/test_{time()}.png', anno_mode=['Mask','Mark'], save=True)
     return pil_image_to_base64(pil_image), mappings
 
 
-def click(label, prev_lookup):
-    print("label:",label)
-    coord = prev_lookup[label]
-    print(coord)
-    x, y = coord.split(", ")
-    x = int(x.replace("(", ""))
-    y = int(y.replace(")", ""))
+def click(label, input, prev_lookup):
+    try:
+        coord = prev_lookup[int(label)]
+    except:
+        return make_screenshot()
+    y, x = coord
+    x = int(x)
+    y = int(y)
     pyautogui.click(x, y)
     return make_screenshot()
 
 
-def type_text(text, prev_lookup):
-    pyautogui.write(text)
+def type_text(label, input, prev_lookup):
+    pyautogui.write(input)
     return make_screenshot()
 
 
-def scroll(amount, prev_lookup):
-    pyautogui.scroll(int(amount))
+def scroll(label, input, prev_lookup):
+    pyautogui.scroll(int(input))
     return make_screenshot()
 
 

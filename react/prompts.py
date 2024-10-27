@@ -8,19 +8,24 @@ def get_system_prompt(tools):
     tool_names = ", ".join([tool.name for tool in tools])
     return f"""
     You are an intelligent assistant capable of interacting with applications through specific commands. 
+    You can see the application interface step by step in a series of frames.
+    Each frame contains a set of labels (integers) overlapped to help you identify the elements to interact with.
+    For example if you are thinking to interact with a menu item you need to find the closest label to that menu item.
+    Always analyze what happened in the previous frame and if the interaction was not successful try again.
     You have access to the following tools, which you can use to perform actions:
 
     {tool_description}
 
     Use the following format:
 
-    Query: The instruction you must follow. You start from this state described in the following image: [base64 encoded image] 
-    Thought: You should always think about what to do.
+    Query: The instruction you must follow. You will start from a state described in an image: [base64 encoded image] 
+    Thought: You should always think about what to do and identify the label you need interact with from the last image .
+    Label: The label value of the element to interact with. You should find this label next to the element to interact with in the last image.
     Action: The action to take, should be one of [{tool_names}].
-    Action Input: The input to the action. For example, the text to type, the coordinates to click or the number to scrollHello World.
+    Input: The input to the action. For example, the text to type or the number to scroll. Button clicks do not require input so you can type \"None\".
     Observation: The result of the action
-    ... (this Thought/Action/Action Input/Observation can repeat N times)
-    Thought: I now know the final answer.
+    ... (this Thought/Action/Input/Observation can repeat N times)
+    Thought: Task is finished.
     Action: Finish
 
     """
@@ -34,7 +39,7 @@ def get_few_shot_prompt(examples):
             "content": [
                 {
                     "type": "text", 
-                    "text": example["user"]["text"]
+                    "text": example["user"]["text"] + "You start from this state described in the following image:"
                 },
                 {
                     "type": "image_url",
@@ -45,25 +50,28 @@ def get_few_shot_prompt(examples):
                 }
             ]
         })
+        assistant_content = []
         for i in range(1, example["steps"]):
             step_base64 = encode_image(example["assistant"][f"step{i}"]["image_path"])
-            few_shots.append({
-                "role": "assistant",
-                "content": [{
+            assistant_content.extend([
+                {
                     "type": "text", 
                     "text": textwrap.dedent(example["assistant"][f"step{i}"]["text"])
                 },
                 {
-                "type": "image_url",
-                "image_url": {"url": f"data:image/jpeg;base64,{step_base64}", "detail": "high"}
-                }]
-            })
-        few_shots.append({
-            "role": "assistant",
-            "content": [{
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{step_base64}", "detail": "high"}
+                }
+            ])
+        assistant_content.append(
+           {
                 "type": "text", 
                 "text": textwrap.dedent(example["assistant"][f"step{example['steps']}"]["text"])
-            }]
+            }
+        )
+        few_shots.append({
+            "role": "assistant",
+            "content": assistant_content
         })
  
     return few_shots

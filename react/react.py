@@ -7,6 +7,10 @@ import litellm
 from dotenv import load_dotenv
 load_dotenv("../.env")
 import re 
+import os
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+import json
+from record import extract_frames_from_video
 
 
 def truncate_obs(text, index):
@@ -32,49 +36,59 @@ def truncate_obs(text, index):
 
 
 class ReActExectutor:
-    def __init__(self, max_depth=3):
+    def __init__(self, max_depth=10, phase2_fp="phase2"):
         self.system_prompt = get_system_prompt(get_tools())
         self.few_shot_prompt = get_few_shot_prompt(get_examples())
         self.new_obs_texts = []
         self.next_images = []
         self.max_depth = max_depth
         self.prev_lookup = None
+        self.phase2_fp = phase2_fp
 
     def parse_output(self, output):
         actions = re.findall(r'Action:\s*(.*)', output)
         action_inputs = re.findall(r'Input:\s*(.*)', output)
+        labels = re.findall(r'Label:\s*(.*)', output)
+        label = labels[0]
         action2execute = actions[0]
         input2take = action_inputs[0]
         tool = get_tool_by_name(action2execute)
-        next_image, lookup = tool.func(input2take, self.prev_lookup)
+        next_image, lookup = tool.func(label, input2take, self.prev_lookup)
         self.prev_lookup = lookup
         new_obs_text = truncate_obs(output, 0)
+        
         self.new_obs_texts.append(new_obs_text)
         self.next_images.append(next_image)
 
+        with open("phase2/steps.txt", "a") as p2s:
+            p2s.write(new_obs_text)
+
+        print(new_obs_text)
+
         new_response = []
+        assistant_content = []
         for new_obs_text, next_image in zip(self.new_obs_texts, self.next_images):
-            new_response.append(
-            {
-                "role": "assistant",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": new_obs_text
-                    },
-                    {
-                    "type": "image_url",
-                    "image_url": {"url": f"data:image/jpeg;base64,{next_image}", "detail": "high"}
-                    }
-                ]
-            })
+            assistant_content.extend([
+                {
+                    "type": "text",
+                    "text": new_obs_text
+                },
+                {
+                "type": "image_url",
+                "image_url": {"url": f"data:image/jpeg;base64,{next_image}", "detail": "high"}
+                }
+            ])
+        new_response = [{
+            "role": "assistant",
+            "content": assistant_content
+        }]
         return new_response
 
     def is_finished(self, output):
         
         actions = re.findall(r'Action:\s*(.*)', output)
         action2execute = actions[0]
-        return action2execute == "Finish" 
+        return action2execute.strip() == "Finish" 
    
     def reset(self):
         self.step = 0
@@ -88,18 +102,17 @@ class ReActExectutor:
         finish = False
         i = 0
         prompt = initial_prompt
-        # import json
-        # with open('a.json', 'w') as f:
-        #     json.dump(prompt, f, indent=4)
-        # return 0
         while not finish and i < self.max_depth:
             response = litellm.completion(model="gpt-4-turbo",
                                         messages=prompt,
                                         max_tokens=4096,
                                         temperature=1).choices[0].message.content
-            print(response)
+            
             finish = self.is_finished(response)
-            prompt = initial_prompt + self.parse_output(response)
+            if not finish:
+                prompt = initial_prompt + self.parse_output(response)
+                with open("prompt.json", "w") as f:
+                    json.dump(prompt, f, indent=4)
             i += 1 
         self.reset()
         return response
@@ -107,15 +120,11 @@ class ReActExectutor:
 
 
 if __name__ == "__main__":
-    p = fr"../data/vscode_mic_rare/*"
-    # logs = get_instruction_set(p)
-    # print(logs)
-    logs = """
-1. Click on the "File" menu option located at the top left corner of the screen.
-2. Select the "New File" option from the dropdown menu under the "File" tab.
-3. From the "Select File Type or Enter File Name" dropdown, choose "Python File."
-4. Begin typing in the text editor area, specifically in the file titled "Untitled-1".
-"""
-    logs = 'Click on the "File" menu option located at the top left corner of the screen.'
-    agent = ReActExectutor()
+    # extract_frames_from_video("examples/rec_wordpad/wordpad_3.mkv", "examples/rec_wordpad_frames", skip_factor=60)
+
+    logs = get_instruction_set("examples/rec_wordpad_frames/*")
+    with open("phase1.txt", "w") as p1:
+        p1.write(logs)
+
+    agent = ReActExectutor(phase2_fp="phase2")
     agent.execute(logs)
