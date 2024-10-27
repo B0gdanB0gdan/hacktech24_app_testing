@@ -1,0 +1,1 @@
+python seeclick/demo.py --logfile seeclick/log_wordpad_interaction.json --images seeclick/screenshots/
