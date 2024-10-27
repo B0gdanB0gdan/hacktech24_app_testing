@@ -1,0 +1,29 @@
+{
+  "actions": [
+    {
+      "type": "click",
+      "element": "Find dialog box",
+      "value": null,
+      "description": "The user clicks on the Find dialog box"
+    },
+    {
+      "type": "type",
+      "element": "Find dialog box",
+      "value": "text",
+      "description": "The user types 'text' in the field with label Find what on the left"
+    },
+    {
+      "type": "click",
+      "element": "Find Next button",
+      "value": null,
+      "description": "The user clicks on the Find Next button"
+    },
+    {
+      "type": "click",
+      "element": "OK button",
+      "value": null,
+      "description": "The user clicks on the OK button"
+    }
+  ],
+  "analysis_complete": true
+}
