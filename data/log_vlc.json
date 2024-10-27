@@ -1,0 +1,41 @@
+{
+  "actions": [
+    {
+      "type": "click",
+      "element": "Media menu",
+      "value": null,
+      "description": "The user clicks on the Media menu"
+    },
+    {
+      "type": "click",
+      "element": "Open File",
+      "value": null,
+      "description": "The user clicks on the Open File menu item"
+    },
+    {
+      "type": "click",
+      "element": "Videos folder",
+      "value": null,
+      "description": "The user clicks on the Videos folder"
+    },
+    {
+      "type": "click",
+      "element": "File name field",
+      "value": null,
+      "description": "The user clicks on the File name field"
+    },
+    {
+      "type": "type",
+      "element": "File name field",
+      "value": "vsc.mkv",
+      "description": "The user types 'vsc.mkv' in the File name field"
+    },
+    {
+      "type": "click",
+      "element": "Open button",
+      "value": null,
+      "description": "The user clicks on the Open button"
+    }
+  ],
+  "analysis_complete": true
+}
